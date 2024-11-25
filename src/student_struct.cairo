@@ -1,4 +1,4 @@
-#[derive(Drop, Serde, starknet::Store)]
+#[derive(Drop, Serde, PartialEq, starknet::Store)]
 pub struct Student {
     pub id: u64,
     pub fname: felt252,

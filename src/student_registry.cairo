@@ -71,11 +71,14 @@ pub mod StudentRegistry {
         // read-only function to get student
         fn get_student(self: @ContractState, index: u64) -> (felt252, felt252, felt252, u8, bool) {
             let student = self.students_map.entry(index).read();
+            assert(student.age > 0, Errors::STUDENT_NOT_REGISTERED);
             (student.fname, student.lname, student.phone_number, student.age, student.is_active)
         }
 
 
         /// Returns all students regardless of whether student is active or not
+        /// Returns empty Span<Student> if there are no students, throwing error might be bad for UX
+        /// on frontend
         fn get_all_students(self: @ContractState) -> Span<Student> {
             // empty array to store students
             let mut all_students: Array<Student> = array![];
@@ -84,8 +87,6 @@ pub mod StudentRegistry {
             // counter
             let mut i = 1;
 
-            // loop through all the students that have been created and return only the ones that
-            // have not been deleted (only active students)
             while i < students_count + 1 {
                 let current_student_data = self.students_map.entry(i).read();
                 all_students.append(current_student_data);
@@ -117,9 +118,8 @@ pub mod StudentRegistry {
             true
         }
 
-        // Note: Deleting a student only reset's the student data to the default values.
-        // It does not remove the student account from the mapping, and therefore it does not reduce
-        // the total number of students created
+        // Deleting a student is essentially deactivating the student
+        // This function sets the is_active to false
         fn delete_student(ref self: ContractState, _index: u64) -> bool {
             let old_student: Student = self.students_map.entry(_index).read();
             // validation to check if student exist
