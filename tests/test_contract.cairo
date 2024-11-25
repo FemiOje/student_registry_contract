@@ -1,47 +1,49 @@
-use starknet::ContractAddress;
+use starknet::{get_caller_address, ContractAddress};
 
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use student_registry_contract::IHelloStarknetSafeDispatcher;
-use student_registry_contract::IHelloStarknetSafeDispatcherTrait;
-use student_registry_contract::IHelloStarknetDispatcher;
-use student_registry_contract::IHelloStarknetDispatcherTrait;
+use student_registry_contract::student_registry::IStudentRegistryDispatcher;
+use student_registry_contract::student_registry::IStudentRegistryDispatcherTrait;
+
+pub mod Accounts {
+    use starknet::ContractAddress;
+    use core::traits::TryInto;
+
+    pub fn admin() -> ContractAddress {
+        'admin'.try_into().unwrap()
+    }
+
+    pub fn account1() -> ContractAddress {
+        'account1'.try_into().unwrap()
+    }
+}
 
 fn deploy_contract(name: ByteArray) -> ContractAddress {
     let contract = declare(name).unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
+    let constructor_args = array![Accounts::admin().into()];
+    let (contract_address, _) = contract.deploy(@constructor_args).unwrap();
     contract_address
 }
 
 #[test]
-fn test_increase_balance() {
-    let contract_address = deploy_contract("HelloStarknet");
+fn test_add_student() {
+    let contract_address = deploy_contract("StudentRegistry");
+    let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
 
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    student_registry_dispatcher.add_student('FirstName', 'LastName', 8012223333, 16, true);
 
-    let balance_before = dispatcher.get_balance();
-    assert(balance_before == 0, 'Invalid balance');
+    let expected = ('FirstName', 'LastName', 8012223333, 16, true);
 
-    dispatcher.increase_balance(42);
-
-    let balance_after = dispatcher.get_balance();
-    assert(balance_after == 42, 'Invalid balance');
+    assert(
+        student_registry_dispatcher.get_student(1) == expected, 'Student not added successfully'
+    );
 }
 
 #[test]
-#[feature("safe_dispatcher")]
-fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract("HelloStarknet");
+#[should_panic(expected: ('age cannot be 0',))]
+fn test_add_zero_student() {
+    let contract_address = deploy_contract("StudentRegistry");
+    let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
 
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    match safe_dispatcher.increase_balance(0) {
-        Result::Ok(_) => core::panic_with_felt252('Should have panicked'),
-        Result::Err(panic_data) => {
-            assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
-        }
-    };
+    student_registry_dispatcher.add_student('FirstName', 'LastName', 8012223333, 0, true);
 }
