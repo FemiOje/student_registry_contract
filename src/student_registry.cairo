@@ -19,9 +19,25 @@ pub trait IStudentRegistry<T> {
 
 #[starknet::contract]
 pub mod StudentRegistry {
-    use starknet::{ContractAddress, get_caller_address};
-    use super::{IStudentRegistry, Student};
     use core::num::traits::Zero;
+    use openzeppelin_access::ownable::OwnableComponent;
+    use openzeppelin_upgrades::UpgradeableComponent;
+    use openzeppelin_upgrades::interface::IUpgradeable;
+    use starknet::{ContractAddress, get_caller_address};
+    use starknet::ClassHash;
+    use super::{IStudentRegistry, Student};
+
+
+    component!(path: OwnableComponent, storage: ownable, event: OwnableEvent);
+    component!(path: UpgradeableComponent, storage: upgradeable, event: UpgradeableEvent);
+
+    // Ownable Mixin
+    #[abi(embed_v0)]
+    impl OwnableMixinImpl = OwnableComponent::OwnableMixinImpl<ContractState>;
+    impl OwnableInternalImpl = OwnableComponent::InternalImpl<ContractState>;
+
+    // Upgradeable
+    impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 
     use starknet::storage::{
         StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map
@@ -30,18 +46,40 @@ pub mod StudentRegistry {
 
     #[storage]
     struct Storage {
+        #[substorage(v0)]
+        ownable: OwnableComponent::Storage,
+        #[substorage(v0)]
+        upgradeable: UpgradeableComponent::Storage,
+
         admin: ContractAddress,
         students_map: Map::<u64, Student>,
         students_index: Map::<u64, ContractAddress>,
         total_no_of_students: u64
     }
 
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        OwnableEvent: OwnableComponent::Event,
+        #[flat]
+        UpgradeableEvent: UpgradeableComponent::Event
+    }
 
     #[constructor]
     fn constructor(ref self: ContractState, _admin: ContractAddress) {
         // validation to check if admin account has valid address and not 0 address
-        assert(self.is_zero_address(_admin) == false, Errors::ZERO_ADDRESS);
+        assert(!self.is_zero_address(_admin), Errors::ZERO_ADDRESS);
         self.admin.write(_admin);
+        self.ownable.initializer(_admin);
+    }
+
+    #[abi(embed_v0)]
+    impl UpgradeableImpl of IUpgradeable<ContractState> {
+        fn upgrade(ref self: ContractState, new_class_hash: ClassHash) {
+            self.ownable.assert_only_owner();
+            self.upgradeable.upgrade(new_class_hash);
+        }
     }
 
     #[abi(embed_v0)]
@@ -142,17 +180,6 @@ pub mod StudentRegistry {
 
     #[generate_trait]
     impl Private of PrivateTrait {
-        fn only_owner(self: @ContractState) {
-            // get function caller
-            let caller: ContractAddress = get_caller_address();
-
-            // get admin of StudentRegistry contract
-            let current_admin: ContractAddress = self.admin.read();
-
-            // assertion logic
-            assert(caller == current_admin, Errors::NOT_ADMIN);
-        }
-
         fn is_zero_address(self: @ContractState, account: ContractAddress) -> bool {
             if account.is_zero() {
                 return true;
