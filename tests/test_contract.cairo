@@ -1,10 +1,9 @@
-use starknet::{get_caller_address, ContractAddress};
-
+use starknet::{ContractAddress};
 use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
+use student_registry_contract::student_struct::Student;
 use student_registry_contract::student_registry::IStudentRegistryDispatcher;
 use student_registry_contract::student_registry::IStudentRegistryDispatcherTrait;
-use student_registry_contract::student_struct::Student;
 
 pub mod Accounts {
     use starknet::ContractAddress;
@@ -154,8 +153,7 @@ fn test_update_student_age_to_zero() {
     let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
 
     student_registry_dispatcher.add_student('FirstName', 'LastName', 8012223333, 16, true);
-    student_registry_dispatcher
-        .update_student(1, 'FirstNameEdited', 'LastNameEdited', 8012223334, 0);
+    student_registry_dispatcher.update_student(1, 'FirstNameEdited', 'LastNameEdited', 8012223334, 0);
 }
 
 #[test]
@@ -194,13 +192,10 @@ fn test_delete_student_and_check() {
             phone_number: 8012223334,
             age: 17,
             is_active: true
-        }
-    ]
-        .span();
+    }].span();
 
     assert(actual == expected, 'Student not deleted.');
 }
-
 
 #[test]
 #[should_panic(expected: ('STUDENT NOT REGISTERED!',))]
