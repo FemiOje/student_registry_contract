@@ -23,7 +23,7 @@ pub mod StudentRegistry {
     use openzeppelin_access::ownable::OwnableComponent;
     use openzeppelin_upgrades::UpgradeableComponent;
     use openzeppelin_upgrades::interface::IUpgradeable;
-    use starknet::{ContractAddress, get_caller_address};
+    use starknet::{ContractAddress};
     use starknet::ClassHash;
     use super::{IStudentRegistry, Student};
 
