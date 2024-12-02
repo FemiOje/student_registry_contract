@@ -16,3 +16,7 @@ fn update_student(ref self: T, index: u64, fname: felt252, lname: felt252, phone
 
 // Does not really delete student record. Essentially "deactivates" student. Only sets is_active to false for given student.
 fn delete_student(ref self: T, _index: u64) -> bool;
+```cairo
+
+Contract deployed at:
+0x079c3197737dc4b3451f1c4faefabbb7a20b3fc10474804c5b7aeaf49512cce0
