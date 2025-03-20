@@ -1,3 +1,5 @@
 target
 .snfoundry_cache/
 deployment
+keystore.json
+account.json
