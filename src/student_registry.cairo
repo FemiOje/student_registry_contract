@@ -4,14 +4,19 @@ use student_registry_contract::student_struct::Student;
 pub trait IStudentRegistry<T> {
     // state-change function to add new studen
     fn add_student(
-        ref self: T, fname: felt252, lname: felt252, phone_number: felt252, age: u8, is_active: bool
+        ref self: T,
+        fname: felt252,
+        lname: felt252,
+        phone_number: felt252,
+        age: u8,
+        is_active: bool,
     ) -> bool;
 
     // read-only function to get student
     fn get_student(self: @T, index: u64) -> (felt252, felt252, felt252, u8, bool);
     fn get_all_students(self: @T) -> Span<Student>;
     fn update_student(
-        ref self: T, index: u64, fname: felt252, lname: felt252, phone_number: felt252, age: u8
+        ref self: T, index: u64, fname: felt252, lname: felt252, phone_number: felt252, age: u8,
     ) -> bool;
     fn delete_student(ref self: T, _index: u64) -> bool;
 }
@@ -40,7 +45,7 @@ pub mod StudentRegistry {
     impl UpgradeableInternalImpl = UpgradeableComponent::InternalImpl<ContractState>;
 
     use starknet::storage::{
-        StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map
+        StoragePointerReadAccess, StoragePointerWriteAccess, StoragePathEntry, Map,
     };
     use student_registry_contract::errors::Errors;
 
@@ -50,11 +55,10 @@ pub mod StudentRegistry {
         ownable: OwnableComponent::Storage,
         #[substorage(v0)]
         upgradeable: UpgradeableComponent::Storage,
-
         admin: ContractAddress,
         students_map: Map::<u64, Student>,
         students_index: Map::<u64, ContractAddress>,
-        total_no_of_students: u64
+        total_no_of_students: u64,
     }
 
     #[event]
@@ -63,7 +67,7 @@ pub mod StudentRegistry {
         #[flat]
         OwnableEvent: OwnableComponent::Event,
         #[flat]
-        UpgradeableEvent: UpgradeableComponent::Event
+        UpgradeableEvent: UpgradeableComponent::Event,
     }
 
     #[constructor]
@@ -91,10 +95,10 @@ pub mod StudentRegistry {
             lname: felt252,
             phone_number: felt252,
             age: u8,
-            is_active: bool
+            is_active: bool,
         ) -> bool {
             let id: u64 = self.total_no_of_students.read() + 1;
-            assert(age > 0, 'age cannot be 0');
+            assert(age > 0, 'age cannot be zero');
             let student = Student { id, fname, lname, phone_number, age, is_active };
 
             // add new student to storage
@@ -147,7 +151,7 @@ pub mod StudentRegistry {
             // validation to check if student exist
             assert(old_student.age > 0, Errors::STUDENT_NOT_REGISTERED);
             let new_student = Student {
-                id: index, fname, lname, phone_number, age, is_active: old_student.is_active
+                id: index, fname, lname, phone_number, age, is_active: old_student.is_active,
             };
             assert(new_student.age > 0, 'age cannot be zero');
             // update student info

@@ -5,5 +5,5 @@ pub struct Student {
     pub lname: felt252,
     pub phone_number: felt252,
     pub age: u8,
-    pub is_active: bool
+    pub is_active: bool,
 }

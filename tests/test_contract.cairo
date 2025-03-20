@@ -39,7 +39,7 @@ fn test_add_student() {
 }
 
 #[test]
-#[should_panic(expected: ('age cannot be 0',))]
+#[should_panic(expected: 'age cannot be zero')]
 fn test_add_zero_student() {
     let contract_address = deploy_contract("StudentRegistry");
     let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
@@ -64,7 +64,7 @@ fn test_get_student() {
 }
 
 #[test]
-#[should_panic(expected: ('STUDENT NOT REGISTERED!',))]
+#[should_panic(expected: 'STUDENT NOT REGISTERED!')]
 fn test_get_student_with_nonexistent_index() {
     let contract_address = deploy_contract("StudentRegistry");
     let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
@@ -86,7 +86,7 @@ fn test_get_all_students() {
         lname: 'LastName',
         phone_number: 8012223333,
         age: 16,
-        is_active: true
+        is_active: true,
     };
 
     let student2 = Student {
@@ -95,13 +95,14 @@ fn test_get_all_students() {
         lname: 'LastName2',
         phone_number: 8012223334,
         age: 17,
-        is_active: false
+        is_active: false,
     };
 
     let all_students = array![student1, student2].span();
 
     assert(
-        student_registry_dispatcher.get_all_students() == all_students, 'error getting all students'
+        student_registry_dispatcher.get_all_students() == all_students,
+        'error getting all students',
     );
 }
 
@@ -153,7 +154,8 @@ fn test_update_student_age_to_zero() {
     let student_registry_dispatcher = IStudentRegistryDispatcher { contract_address };
 
     student_registry_dispatcher.add_student('FirstName', 'LastName', 8012223333, 16, true);
-    student_registry_dispatcher.update_student(1, 'FirstNameEdited', 'LastNameEdited', 8012223334, 0);
+    student_registry_dispatcher
+        .update_student(1, 'FirstNameEdited', 'LastNameEdited', 8012223334, 0);
 }
 
 #[test]
@@ -183,7 +185,7 @@ fn test_delete_student_and_check() {
             lname: 'LastName',
             phone_number: 8012223333,
             age: 16,
-            is_active: false
+            is_active: false,
         },
         Student {
             id: 2,
@@ -191,8 +193,10 @@ fn test_delete_student_and_check() {
             lname: 'LastName2',
             phone_number: 8012223334,
             age: 17,
-            is_active: true
-    }].span();
+            is_active: true,
+        },
+    ]
+        .span();
 
     assert(actual == expected, 'Student not deleted.');
 }
